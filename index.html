@@ -5,8 +5,34 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+    <header>
+        My Library
+    </header>
     <main>
-
+        <table id="library-table">
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Pages</th>
+                <th>Read</th>
+            </tr>
+        </table>
+        <div>
+            <button id="add-book-button">Add a book!</button>
+            <div id="form-container">
+                <form id="hideable-form">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title-input" name="title"><br>
+                    <label for="author">Author:</label>
+                    <input type="author" id="author-input" name="author"><br>
+                    <label for="pages">Pages:</label>
+                    <input type="text" id="pages-input" name="pages"><br>
+                    <label for="read">Read?:</label>
+                    <input type="checkbox" id="read-input" name="read"><br>
+                    <button id="form-submit">Submit</button>
+                </form>
+            </div>
+        </div>
     </main>
     <script type="text/javascript" src="library.js"></script>
 </body>
