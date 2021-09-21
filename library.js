@@ -1,8 +1,11 @@
 // Library for storing books
-let myLibrary = [];
+let myLibrary = []
+var currentRow = 1
+var currentId = 0
 
 // Book object
 function Book(title, author, pages, isRead) {
+    this.id = getNextId()
     this.title = title
     this.author = author
     this.pages = pages
@@ -14,7 +17,7 @@ Book.prototype.print = function() {
 }
 
 // HTML objects
-var currentRow = 1;
+
 const table = document.getElementById("library-table")
 const addBookButton = document.getElementById("add-book-button")
 const form = document.getElementById("hideable-form")
@@ -35,7 +38,7 @@ function hideNewBookForm() {
 }
 
 function acceptFormInput() {
-    const newBook = new Book(titleInput.value, authorInput.value, pagesInput.value, readInput.value)
+    const newBook = new Book(titleInput.value, authorInput.value, pagesInput.value, readInput.checked)
     addBookToLibrary(newBook)
     updateTable()
     clearForm()
@@ -46,10 +49,14 @@ function clearForm() {
     titleInput.value = ""
     authorInput.value = ""
     pagesInput.value = ""
-    readInput.value = ""
+    readInput.checked = false
 }
 
 // Library functions
+function getNextId() {
+    currentId++
+    return currentId
+}
 function addBookToLibrary(book) {
     if(book.constructor.name === 'Book') {
         myLibrary.push(book)
@@ -57,17 +64,22 @@ function addBookToLibrary(book) {
 }
 
 function addBookToTable(book) {
+    if(!book) {
+        return
+    }
     const row = table.insertRow(currentRow)
     const cellTitle = row.insertCell(0)
     const cellAuthor = row.insertCell(1)
     const cellPages = row.insertCell(2)
     const cellIsRead = row.insertCell(3)
-    const cellDelete = row.insertCell(4)
+    const cellReadButton = row.insertCell(4)
+    const cellDeleteButton = row.insertCell(5)
     cellTitle.innerHTML = book.title
     cellAuthor.innerHTML = book.author
     cellPages.innerHTML = book.pages
-    cellIsRead.innerHTML = book.isRead ? "Yes" : ""
-    cellDelete.innerHTML = `<button class="delete-button" id="delete-button-${ currentRow }">Delete</button>`
+    cellIsRead.innerHTML = (book.isRead === true) ? "Yes" : ""
+    cellReadButton.innerHTML = `<button class="read-button" id="${ book.id }-read-button">I read it!</button>`
+    cellDeleteButton.innerHTML = `<button class="delete-button" id="${ book.id }-delete-button">Delete</button>`
     currentRow++
 }
 
@@ -76,20 +88,61 @@ function updateTable() {
         table.deleteRow(currentRow - 1)
         currentRow--
     }
-
     myLibrary.forEach( book => addBookToTable(book) )
+    updateButtons()
 }
 
 function printLibraryToConsole(library) {
     console.log("Books in library:")
-    library.forEach( book => console.log(book.title) )
+    myLibrary.forEach( book => console.log(book.title) )
 }
 
-function updateDeleteButtons() {
-    const deleteButtons = document.getElementsByClassName("delete-button")
-    
+function updateButtons() {
+    const readButtons = Array.from(document.getElementsByClassName("read-button"))
+    readButtons.forEach(button => {
+        button.onclick = function() {
+            bookId = button.id.split("-")[0]
+            toggleReadBook(bookId)
+        }
+    } )
+    const deleteButtons = Array.from(document.getElementsByClassName("delete-button"))
+    deleteButtons.forEach(button => {
+        button.onclick = function() {
+            bookId = button.id.split("-")[0]
+            removeBookFromLibrary(bookId)
+        }
+    } )
 }
 
+function toggleReadBook(id) {
+    console.log(getBookById(id).isRead)
+    getBookById(id).isRead = !getBookById(id).isRead
+    updateTable()
+}
+
+function removeBookFromLibrary(idToDelete) {
+    indexToDelete = getIndexOfBook(getBookById(idToDelete))
+    delete myLibrary[indexToDelete]
+    updateTable()
+}
+
+function getIndexOfBook(bookToFind) {
+    for(let i = 0; i < myLibrary.length; i++) {
+        if(bookToFind.id === myLibrary[i].id) {
+            return i
+        }
+    }
+}
+
+function getBookById(id) {
+    let bookToReturn
+    myLibrary.forEach(book => {
+        if(book.id === Number(id)) {
+            bookToReturn = book
+        }
+    })
+    return bookToReturn
+}
 
 // Button Events
 addBookButton.onclick = function() {
@@ -99,8 +152,8 @@ formSubmitButton.onclick = function() {
     acceptFormInput()
 }
 
-var theHobbit = new Book("The Hobbit", "JRR Tolkein", 1002, "Yes")
-var theLordOfTheRings = new Book("The Lord of the Rings", "JRR Tolkein", 4442, "Yes")
+var theHobbit = new Book("The Hobbit", "JRR Tolkein", 1002, true)
+var theLordOfTheRings = new Book("The Lord of the Rings", "JRR Tolkein", 4442, true)
 
 addBookToLibrary(theHobbit)
 addBookToLibrary(theLordOfTheRings)
