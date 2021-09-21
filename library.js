@@ -12,6 +12,18 @@ function Book(title, author, pages, isRead) {
     this.isRead = isRead
 }
 
+function createBookWithId(aTitle, aAuthor, aPages, aIsRead, aId) {
+    book = {
+        id: Number(aId),
+        title: aTitle,
+        author: aAuthor,
+        pages: aPages,
+        isRead: aIsRead,
+        prototype: Book
+    }
+    return book
+}
+
 Book.prototype.print = function() {
     return this.title + " by " + this.author
 }
@@ -27,6 +39,7 @@ const pagesInput = document.getElementById("pages-input")
 const readInput = document.getElementById("read-input")
 const formContainer = document.getElementById("form-container")
 const formSubmitButton = document.getElementById("form-submit")
+const localStorage = window.localStorage
 
 // Form control
 function showNewBookForm() {
@@ -58,8 +71,12 @@ function getNextId() {
     return currentId
 }
 function addBookToLibrary(book) {
-    if(book.constructor.name === 'Book') {
+    if(book) {
         myLibrary.push(book)
+    }
+    console.log(book.title + " has id " + book.id + " and is in storage: " + localStorage.getItem(book.id))
+    if(localStorage.getItem(book.id) == null) {
+        addBookToStorage(book)
     }
 }
 
@@ -115,7 +132,6 @@ function updateButtons() {
 }
 
 function toggleReadBook(id) {
-    console.log(getBookById(id).isRead)
     getBookById(id).isRead = !getBookById(id).isRead
     updateTable()
 }
@@ -124,24 +140,58 @@ function removeBookFromLibrary(idToDelete) {
     indexToDelete = getIndexOfBook(getBookById(idToDelete))
     delete myLibrary[indexToDelete]
     updateTable()
+    removeBookFromStorage(idToDelete)
 }
 
 function getIndexOfBook(bookToFind) {
+    if(!bookToFind) {
+        return
+    }
     for(let i = 0; i < myLibrary.length; i++) {
         if(bookToFind.id === myLibrary[i].id) {
             return i
         }
     }
+    return -1
 }
 
 function getBookById(id) {
-    let bookToReturn
+    let bookToReturn = null
     myLibrary.forEach(book => {
         if(book.id === Number(id)) {
             bookToReturn = book
         }
     })
     return bookToReturn
+}
+
+// Storage functions
+function addBookToStorage(book) {
+    const key = book.id
+    const value = "@title=" + book.title + "@author=" + book.author + "@pages=" + book.pages + "@read=" + book.isRead + "@id=" + book.id
+    localStorage.setItem(key, value)
+}
+
+function loadBookFromString(s) {
+    const values = s.split("@")
+    const newBook = createBookWithId(values[1].substring(6,), values[2].substr(7,), values[3].substr(6,), values[4].substr(5,), values[5].substr(3,))
+    return newBook
+}
+
+function loadBooksFromStorage() {
+    for (let idToGet = 1; idToGet < 100; idToGet++) {
+        if(localStorage.getItem(idToGet) != null) {
+            const book = loadBookFromString(localStorage.getItem(idToGet))
+            if(getIndexOfBook(book) == -1) {
+                addBookToLibrary(book)
+            }
+            currentId = idToGet
+        }
+    }
+}
+
+function removeBookFromStorage(idToDelete) {
+    localStorage.removeItem(idToDelete)
 }
 
 // Button Events
@@ -152,11 +202,13 @@ formSubmitButton.onclick = function() {
     acceptFormInput()
 }
 
+// Page Set up
 var theHobbit = new Book("The Hobbit", "JRR Tolkein", 1002, true)
 var theLordOfTheRings = new Book("The Lord of the Rings", "JRR Tolkein", 4442, true)
 
 addBookToLibrary(theHobbit)
 addBookToLibrary(theLordOfTheRings)
+loadBooksFromStorage()
 
-hideNewBookForm()
+hideNewBookForm()   
 updateTable()
